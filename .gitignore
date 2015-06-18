@@ -1,0 +1,20 @@
+.idea/
+__data__/
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.tox/
+.coverage
+.coverage.*
+
+# Translations
+*.mo
+*.pot
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
