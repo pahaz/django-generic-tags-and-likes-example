@@ -5,16 +5,21 @@ __author__ = 'pahaz'
 
 
 class TagManager(models.Manager):
-    def delete_unused(self, keyword_ids=None):
+    def delete_unused(self, tags=None):
         """
         Removes all instances that are not assigned to any object. Limits
-        processing to ``keyword_ids`` if given.
+        processing to ``tags_ids`` if given.
         """
-        if keyword_ids is None:
-            keywords = self.all()
-        else:
-            keywords = self.filter(id__in=keyword_ids)
-        keywords.filter(assignments__isnull=True).delete()
+        tags_ids = [x.id for x in tags] if tags else None
+        tags = self.all() if tags_ids is None else self.filter(id__in=tags_ids)
+        tags.filter(items__isnull=True).delete()
+
+    def get_or_create_list(self, tags):
+        result = []
+        for tag in tags:
+            obj, is_created = self.get_or_create(title=tag)
+            result.append(obj)
+        return result
 
 
 class TaggedModelManager(models.Manager):
