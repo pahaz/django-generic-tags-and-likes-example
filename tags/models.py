@@ -7,7 +7,7 @@ from django.db.models import QuerySet
 from django.utils.translation import ugettext, ugettext_lazy as _
 from core.utils import get_user_model_name
 from django.db import models
-from tags.managers import TagManager, TaggedModelManager
+from tags.managers import TagManager
 from tags.utils import parse_tag_input, join_tags
 
 __author__ = 'pahaz'
@@ -39,9 +39,6 @@ class TaggedModel(models.Model):
     tagged_items = GenericRelation(TaggedItem, editable=False)
     tags_string_cache = models.CharField(max_length=2000, blank=True,
                                          default='', editable=False)
-
-    objects = models.Manager()
-    tagged_objects = TaggedModelManager()
 
     def _get_tags(self):
         return self.tags_string_cache

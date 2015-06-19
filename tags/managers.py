@@ -20,7 +20,3 @@ class TagManager(models.Manager):
             obj, is_created = self.get_or_create(title=tag)
             result.append(obj)
         return result
-
-
-class TaggedModelManager(models.Manager):
-    pass
