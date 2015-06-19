@@ -9,9 +9,10 @@ from django.db import models
 
 __author__ = 'pahaz'
 user_model_name = get_user_model_name()
+USE_UNICODE_SLUGIFY = setattr(settings, 'USE_UNICODE_SLUGIFY', False)
 
 
-class TimeStamped(models.Model):
+class Dated(models.Model):
     """
     Provides created and updated timestamps on models.
     """
@@ -23,7 +24,7 @@ class TimeStamped(models.Model):
     updated = models.DateTimeField(editable=False, auto_now=True)
 
 
-class Ownable(models.Model):
+class Owned(models.Model):
     """
     Provides ownership of an object for a user.
     """
@@ -54,6 +55,7 @@ class Slugged(models.Model):
                         "the title."), db_index=True)
 
     class Meta:
+        unique_together = [('slug', )]
         abstract = True
 
     def __str__(self):
@@ -72,7 +74,7 @@ class Slugged(models.Model):
         Create a unique slug by passing the result of get_slug() to
         utils.unique_slug, which appends an index if necessary.
         """
-        slug_qs = self.objects.exclude(id=self.id)
+        slug_qs = type(self).objects.exclude(id=self.id)
         return unique_slug(slug_qs, "slug", self.get_slug())
 
     def get_slug(self):
@@ -80,14 +82,14 @@ class Slugged(models.Model):
         Allows subclasses to implement their own slug creation logic.
         """
         slugged = self.title or ''
-        if settings.USE_UNICODE_SLUGIFY:
+        if USE_UNICODE_SLUGIFY:
             # https://pypi.python.org/pypi/unicode-slugify/0.1.3
             from slugify import slugify
             slugged = slugify(slugged)
         return slugged
 
 
-class GenericItem(models.Model):
+class Generalized(models.Model):
     object_id = models.IntegerField(verbose_name=_('Object id'), db_index=True)
     content_type = models.ForeignKey(
         ContentType,
@@ -99,3 +101,10 @@ class GenericItem(models.Model):
     class Meta:
         index_together = ("content_type", "object_id")
         abstract = True
+
+#
+# class DataExtended(models.Model):
+#     extra = models.CharField(verbose_name=_('Extra data'), max_length=2000)
+#
+#     class Meta:
+#         abstract = True

@@ -20,9 +20,9 @@ def detect_test_apps():
             continue
 
         init_file = os.path.join(test_dir, '__init__.py')
-        test_settings_file = os.path.join(test_dir, 'test_settings.py')
+        test_settings_file = os.path.join(test_dir, 'settings.py')
         models_file = os.path.join(test_dir, 'models.py')
-        tests_file = os.path.join(test_dir, 'tests.py')
+        tests_file = os.path.join(test_dir, 'test_models.py')
         files = [init_file, test_settings_file, models_file, tests_file]
         if all(map(os.path.isfile, files)):
             yield dir_
@@ -31,7 +31,7 @@ def detect_test_apps():
 if __name__ == "__main__":
     for app in detect_test_apps():
         print(' * Test * : ' + app)
-        os.environ['DJANGO_SETTINGS_MODULE'] = app + '.tests.test_settings'
+        os.environ['DJANGO_SETTINGS_MODULE'] = app + '.tests.settings'
         django.setup()
         TestRunner = get_runner(settings)
         test_runner = TestRunner()
