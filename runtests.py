@@ -7,6 +7,7 @@ from django.conf import settings
 from django.test.utils import get_runner
 
 __author__ = 'pahaz'
+# based on http://djbook.ru/rel1.8/topics/testing/advanced.html#using-the-django-test-runner-to-test-reusable-applications
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '__data__')
 VENV_DIR = os.path.join(DATA_DIR, 'venv')
