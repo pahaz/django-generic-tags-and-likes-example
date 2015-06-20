@@ -30,7 +30,7 @@ class Owned(models.Model):
     """
 
     user = models.ForeignKey(user_model_name, verbose_name=_("Author"),
-        related_name="%(class)ss", editable=False)
+        related_name="%(class)ss", editable=False, db_index=True)
 
     class Meta:
         abstract = True
