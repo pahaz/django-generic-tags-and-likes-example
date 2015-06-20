@@ -29,19 +29,23 @@ def detect_test_apps():
 
 
 if __name__ == "__main__":
-    do_tasts = lambda x: True
-    if len(sys.argv) == 2:
-        do_tasts = lambda x: x == sys.argv[1]
+    apps = list(detect_test_apps())
+    if len(sys.argv) == 2 and sys.argv[1] in apps:
+        app = sys.argv[1]
+    else:
+        cmds = ["python {0} {1}".format(sys.argv[0], x) for x in apps]
+        print("""Use: python {0} app_name
+Available apps: {1}
+-----
+{2}
+        """.format(sys.argv[0], ', '.join(apps), '\n'.join(cmds)))
+        sys.exit(2)
 
-    for app in detect_test_apps():
-        if not do_tasts(app):
-            continue
-
-        print(' * Test * : ' + app)
-        os.environ['DJANGO_SETTINGS_MODULE'] = app + '.tests.settings'
-        django.setup()
-        TestRunner = get_runner(settings)
-        test_runner = TestRunner()
-        failures = test_runner.run_tests([app + ".tests"])
-        if failures:
-            sys.exit(bool(failures))
+    print(' * Test * : ' + app)
+    os.environ['DJANGO_SETTINGS_MODULE'] = app + '.tests.settings'
+    django.setup()
+    TestRunner = get_runner(settings)
+    test_runner = TestRunner()
+    failures = test_runner.run_tests([app + ".tests"])
+    if failures:
+        sys.exit(bool(failures))
