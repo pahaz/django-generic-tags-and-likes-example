@@ -14,14 +14,14 @@ USE_UNICODE_SLUGIFY = setattr(settings, 'USE_UNICODE_SLUGIFY', False)
 
 class Dated(models.Model):
     """
-    Provides created and updated timestamps on models.
+    Provides created_at and updated_at timestamps on models.
     """
 
     class Meta:
         abstract = True
 
-    created = models.DateTimeField(editable=False, auto_now_add=True)
-    updated = models.DateTimeField(editable=False, auto_now=True)
+    created_at = models.DateTimeField(editable=False, auto_now_add=True)
+    updated_at = models.DateTimeField(editable=False, auto_now=True)
 
 
 class Owned(models.Model):
