@@ -18,19 +18,19 @@ Required Django 1.8!
 
 Abstract Interface:
 
- - objects_liked_by(user)
- - like_by(user)
- - dislike_by(user)
- - is_liked_by(user)
- - likes  # get property
+ - `objects_liked_by(user)`
+ - `like_by(user)`
+ - `dislike_by(user)`
+ - `is_liked_by(user)`
+ - `likes`  # get property
 
 ## TaggedModel ##
 
 Abstract Interface:
 
- - objects_tagged_by_any(tags, exclude_tags)
- - objects_tagged_by_all(tags, exclude_tags)
- - tags  # get/set property
+ - `objects_tagged_by_any(tags, exclude_tags)`
+ - `objects_tagged_by_all(tags, exclude_tags)`
+ - `tags`  # get/set property
 
 # How-To
 
