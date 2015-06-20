@@ -2,7 +2,7 @@ from __future__ import unicode_literals, print_function, generators, division
 import logging
 from core._six import text_type
 from core.models import Slugged, Generalized
-from django.contrib.contenttypes.generic import GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet, Q, Count
 from django.utils.translation import ugettext, ugettext_lazy as _

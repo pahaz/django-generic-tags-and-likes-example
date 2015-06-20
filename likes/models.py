@@ -3,7 +3,7 @@ import logging
 from core._six import text_type
 from core.models import Generalized, Owned
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.generic import GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
 from django.utils.translation import ugettext, ugettext_lazy as _
