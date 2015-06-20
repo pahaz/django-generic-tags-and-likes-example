@@ -1,4 +1,5 @@
 from __future__ import unicode_literals, print_function, generators, division
+import unittest
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.utils.crypto import get_random_string
@@ -18,6 +19,9 @@ class TestTaggedModel(TestCase):
     def make_unsaved_photo(self):
         return Photo()
 
+    def get_photo_class(self):
+        return Photo
+
     def filter_photo(self, **kwargs):
         return Photo.objects.filter(**kwargs)
 
@@ -31,6 +35,10 @@ class TestTaggedModel(TestCase):
                            obj._get_tagged_items_query_set())
         self.assertEqual(expected_tags, current_tags_cache, 'Invalid cache')
         self.assertEqual(expected_tags, current_tags, 'Invalid rel objects')
+
+    def assertNotTaggedBy(self, tag_title):
+        tagged = self.filter_photo(tagged_items__tag__title=tag_title)
+        self.assertEqual(tagged.count(), 0)
 
     def test_default_no_tags(self):
         p = self.make_photo()
@@ -85,3 +93,103 @@ class TestTaggedModel(TestCase):
         p2.tags = TAG_BLACK
         self.assertEqual(TAGGED_BLACK.count(), 2)
         self.assertEqual(TAGGED_RETRO.count(), 1)
+
+    def test_tagged_by_any(self):
+        TAG_BLACK = "Black" + get_random_string()
+        TAG_RETRO = "Retro" + get_random_string()
+        TAG_VINTAGE = "Vintage" + get_random_string()
+
+        self.assertNotTaggedBy(TAG_BLACK)
+        self.assertNotTaggedBy(TAG_RETRO)
+        self.assertNotTaggedBy(TAG_VINTAGE)
+
+        p1 = self.make_photo()
+        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
+        p2 = self.make_photo()
+        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+
+        bvr = p1.tagged_by_any([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
+            .order_by('id')
+        print("\n_ANY_bvr_", bvr.query)
+        self.assertQuerysetEqual(bvr, map(repr, [p1, p2]))
+
+        bv = p1.tagged_by_any([TAG_BLACK, TAG_VINTAGE])\
+            .order_by('id')
+        print("\n_ANY_bv_", bv.query)
+        self.assertQuerysetEqual(bv, map(repr, [p1, p2]))
+
+    @unittest.skip("Not implemented")
+    def test_tagged_by_any_with_exclude(self):
+        TAG_BLACK = "Black" + get_random_string()
+        TAG_RETRO = "Retro" + get_random_string()
+        TAG_VINTAGE = "Vintage" + get_random_string()
+
+        self.assertNotTaggedBy(TAG_BLACK)
+        self.assertNotTaggedBy(TAG_RETRO)
+        self.assertNotTaggedBy(TAG_VINTAGE)
+
+        p1 = self.make_photo()
+        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
+        p2 = self.make_photo()
+        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+
+        bvNr = p1.tagged_by_any([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
+            .order_by('id')
+        print("\n_ANY_bvNr_", bvNr.query)
+        self.assertQuerysetEqual(bvNr, map(repr, [p2]))
+
+        bNvNr = p1.tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+                                 [TAG_RETRO, TAG_VINTAGE])\
+            .order_by('id')
+        print("\n_ANY_bNvNr_", bNvNr.query)
+        self.assertQuerysetEqual(bNvNr, [])
+
+    def test_tagged_by_all(self):
+        TAG_BLACK = "Black" + get_random_string()
+        TAG_RETRO = "Retro" + get_random_string()
+        TAG_VINTAGE = "Vintage" + get_random_string()
+
+        self.assertNotTaggedBy(TAG_BLACK)
+        self.assertNotTaggedBy(TAG_RETRO)
+        self.assertNotTaggedBy(TAG_VINTAGE)
+
+        p1 = self.make_photo()
+        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
+        p2 = self.make_photo()
+        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+
+        bvr = p1.tagged_by_all([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
+            .order_by('id')
+        print("\n_ALL_bvr_", bvr.query)
+        self.assertQuerysetEqual(bvr, map(repr, []))
+
+        bv = p1.tagged_by_all([TAG_BLACK, TAG_VINTAGE])\
+            .order_by('id')
+        print("\n_ALL_bv_", bv.query)
+        self.assertQuerysetEqual(bv, map(repr, [p2]))
+
+    @unittest.skip("Not implemented")
+    def test_tagged_by_all_with_exclude(self):
+        TAG_BLACK = "Black" + get_random_string()
+        TAG_RETRO = "Retro" + get_random_string()
+        TAG_VINTAGE = "Vintage" + get_random_string()
+
+        self.assertNotTaggedBy(TAG_BLACK)
+        self.assertNotTaggedBy(TAG_RETRO)
+        self.assertNotTaggedBy(TAG_VINTAGE)
+
+        p1 = self.make_photo()
+        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
+        p2 = self.make_photo()
+        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+
+        bvNr = p1.tagged_by_all([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
+            .order_by('id')
+        print("\n_ALL_bvNr_", bvNr.query)
+        self.assertQuerysetEqual(bvNr, map(repr, [p2]))
+
+        bNvNr = p1.tagged_by_all([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+                                 [TAG_RETRO, TAG_VINTAGE])\
+            .order_by('id')
+        print("\n_ALL_bNvNr_", bNvNr.query)
+        self.assertQuerysetEqual(bNvNr, [])

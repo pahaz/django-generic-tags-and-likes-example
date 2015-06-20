@@ -3,16 +3,18 @@ import logging
 from core._six import text_type
 from core.models import Slugged, Generalized
 from django.contrib.contenttypes.generic import GenericRelation
-from django.db.models import QuerySet
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import QuerySet, Q, Count
 from django.utils.translation import ugettext, ugettext_lazy as _
 from core.utils import get_user_model_name
-from django.db import models
+from django.db import models, connection
 from tags.managers import TagManager
 from tags.utils import parse_tag_input, join_tags
 
 __author__ = 'pahaz'
 user_model_name = get_user_model_name()
 log = logging.getLogger(__name__)
+qn = connection.ops.quote_name
 
 
 class Tag(Slugged):
@@ -30,7 +32,12 @@ class TaggedItem(Generalized):
 
     class Meta:
         db_table = 'tagged_items'
-        unique_together = (('content_type', 'object_id', 'tag'), )
+        unique_together = (
+            ('content_type', 'object_id', 'tag'),
+        )
+        index_together = (
+            ('content_type', 'tag'),
+        )
         verbose_name = _('Tagged item')
         verbose_name_plural = _('Tagged items')
 
@@ -39,6 +46,69 @@ class TaggedModel(models.Model):
     tagged_items = GenericRelation(TaggedItem, editable=False)
     tags_string_cache = models.CharField(max_length=2000, blank=True,
                                          default='', editable=False)
+
+    @classmethod
+    def tagged_by_any(cls, tags, exclude_tags=None):
+        tags = [x.pk for x in Tag.objects.get_or_create_list(tags)]
+        if exclude_tags:
+            exclude_tags = [x.pk for x in
+                            Tag.objects.get_or_create_list(exclude_tags)]
+        qs = cls.objects.all().annotate(ids=Count('id'))
+        qs = qs.filter(Q(tagged_items__tag_id__in=tags) & Q(ids__gte=1))
+        if exclude_tags:
+            # TODO: FIX IT
+            raise NotImplementedError
+            # model = qn(cls._meta.db_table)
+            # model_pk = qn(cls._meta.pk.column)
+            # tagged = qn(TaggedItem._meta.db_table)
+            # tagged_object_id = qn('object_id')
+            # tagged_content_type_id = qn('content_type_id')
+            # tagged_tag_id = qn('tag_id')
+            # tags_ids = ', '.join(map(str, tags))
+            # model_content_type_id = ContentType.objects.get_for_model(cls).pk
+            # # SELECT U1."object_id" FROM tagged_items U1 WHERE
+            # (U1."tag_id" IN (1) AND U1."content_type_id" = 4)
+            # qs = qs.extra(where=["""
+            # NOT ({model}.{model_pk} IN
+            # (
+            #     SELECT TAGGED1.{tagged_object_id} FROM {tagged} AS TAGGED1
+            #     WHERE TAGGED1.{tagged_tag_id} IN ({tags_ids}) AND
+            #        TAGGED1.{tagged_content_type_id} = {model_content_type_id}
+            # ))
+            # """.format(**locals())])
+
+        # same with Q objects! TODO: test who faster :)
+        # if tags:
+        #     q = Q()
+        #     for tag in tags:
+        #         q &= Q(tagged_items__tag__title=tag)
+        #     qs = cls.objects.filter(q)
+        # else:
+        #     qs = cls.objects.all()
+        # if exclude_tags:
+        #     for tag in exclude_tags:
+        #         q &= ~Q(tagged_items__tag__title=tag)
+        #     qs = cls.objects.exclude(q)
+
+        return qs
+
+    @classmethod
+    def tagged_by_all(cls, tags, exclude_tags=None):
+        tags = [x.pk for x in Tag.objects.get_or_create_list(tags)]
+        if exclude_tags:
+            exclude_tags = [x.pk for x in
+                            Tag.objects.get_or_create_list(exclude_tags)]
+        # tags = set(tags)
+        # if exclude_tags:
+        #     exclude_tags = set(exclude_tags)
+        #     tags = tags - exclude_tags
+        qs = cls.objects.all().annotate(ids=Count('id'))
+        qs = qs.filter(Q(tagged_items__tag_id__in=tags) & Q(ids=len(tags)))
+        if exclude_tags:
+            # TODO: FIX IT
+            raise NotImplementedError
+            # q = q & (~Q(tagged_items__tag_id__in=exclude_tags))
+        return qs
 
     def _get_tags(self):
         return self.tags_string_cache
