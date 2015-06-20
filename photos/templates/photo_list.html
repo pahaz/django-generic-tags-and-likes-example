@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <style>
+        body {
+            text-align: center;
+        }
+
+        /* For modern browsers */
+        .clearfix:before,
+        .clearfix:after {
+           content: "";
+           display: table;
+        }
+        .clearfix:after {
+            clear: both;
+        }
+
+        .photo {
+            width: 100px;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+{% if photos %}
+    <div class="photos clearfix">
+    {% for photo in photos %}
+        <div class="photo"><a href="{{ photo.url }}">
+            <img src="{{ photo.url }}" title="{{ photo.id }}" width=50>
+        </a></div>
+    {% endfor %}
+    </div>
+    {% if is_paginated %}
+        <div class="pagination">
+            <span class="page-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+                <span class="page-current">
+                    Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} ({{ paginator.count }}).
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+    
+{% else %}
+    <p>No photos!</p>
+{% endif %}
+<div class="tags">
+    {% for tag in tags %}
+    <a href="{% url "photos_tagged" tags=tag.slug %}">{{ tag.title }}</a>
+    {% endfor %}
+</div>
+</body>
+</html>
