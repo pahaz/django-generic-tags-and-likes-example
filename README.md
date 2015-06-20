@@ -1,5 +1,7 @@
 # Simple Tagged/Liked Photo Server
 
+[![Circle CI](https://circleci.com/gh/pahaz/django-generic-tags-and-likes-example.svg?style=svg)](https://circleci.com/gh/pahaz/django-generic-tags-and-likes-example)
+
 Example of use django generic models (contenttype framework). Provide two 
 generic apps: `tags` and `likes`. And `photos` app as example of use `tags` and
  `likes`.
