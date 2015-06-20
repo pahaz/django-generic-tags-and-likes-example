@@ -9,6 +9,7 @@ from django.db.models import QuerySet
 from django.utils.translation import ugettext, ugettext_lazy as _
 from core.utils import get_user_model_name
 from django.db import models
+from django.db.models import F
 
 __author__ = 'pahaz'
 user_model_name = get_user_model_name()
@@ -51,8 +52,7 @@ class LikedModel(models.Model):
         like, created = self._get_liked_items_query_set().get_or_create(
             user_id=user.pk)
         if created:
-            self.liked_count_cache += 1
-            self.save()
+            self._change_cache_value(+1)
         return created
 
     def dislike_by(self, user):
@@ -60,8 +60,7 @@ class LikedModel(models.Model):
         self._check_model_has_pk('dislike_by')
         if self.is_liked_by(user):
             self._get_liked_items_query_set(user_id=user.pk).delete()
-            self.liked_count_cache -= 1
-            self.save()
+            self._change_cache_value(-1)
             return True
         return False
 
@@ -101,6 +100,11 @@ class LikedModel(models.Model):
         if self.pk is None:
             raise ValueError("Cannot like to unsaved object. "
                              "Use .save() before {0}.".format(for_method))
+
+    def _change_cache_value(self, value):
+        type(self).objects.filter(pk=self.pk).update(
+            liked_count_cache=F('liked_count_cache') + value)
+        self.refresh_from_db(fields=['liked_count_cache'])
 
     class Meta:
         abstract = True
