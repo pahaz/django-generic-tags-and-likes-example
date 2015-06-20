@@ -18,3 +18,5 @@ docs/_build/
 
 # PyBuilder
 target/
+
+test-photo.csv
