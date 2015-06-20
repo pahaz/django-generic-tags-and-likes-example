@@ -39,8 +39,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'taggit',
-    'foo',
+    'django_extensions',
+    'debug_toolbar',
+    'tags',
+    'likes',
+    'photos',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -59,7 +62,7 @@ ROOT_URLCONF = '_project_.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(PROJECT_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,6 +87,19 @@ DATABASES = {
         'NAME': os.path.join(DATA_DIR, 'db.sqlite3'),
     }
 }
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'test1',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
+    }
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -112,10 +128,5 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(PROJECT_DIR, 'static')
 ]
-
-TEMPLATE_DIRS = (
-    os.path.join(PROJECT_DIR, 'templates'),
-)
-
 
 USE_UNICODE_SLUGIFY = True
