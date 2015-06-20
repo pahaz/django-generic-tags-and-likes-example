@@ -5,6 +5,6 @@ machine:
 test:
   override:
     - python init.py
-    - `python init.py active`
+    - . __data__\venv\Sctipts\activate
     - python runtests.py tags
     - python runtests.py likes
