@@ -7,6 +7,7 @@ __author__ = 'pahaz'
 BASE_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(BASE_DIR, '__data__')
 VENV_DIR = os.path.join(DATA_DIR, 'venv')
+MEDIA_DIR = os.path.join(DATA_DIR, 'media')
 
 
 def mkdir(path):
@@ -39,5 +40,6 @@ if __name__ == "__main__":
         print(mkactivate(VENV_DIR))
     else:
         mkdir(DATA_DIR)
+        mkdir(MEDIA_DIR)
         mkvenv(VENV_DIR)
         run_in_venv(VENV_DIR, 'pip install -r requirements.txt')
