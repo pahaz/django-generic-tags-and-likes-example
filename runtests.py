@@ -29,7 +29,14 @@ def detect_test_apps():
 
 
 if __name__ == "__main__":
+    do_tasts = lambda x: True
+    if len(sys.argv) == 2:
+        do_tasts = lambda x: x == sys.argv[1]
+
     for app in detect_test_apps():
+        if not do_tasts(app):
+            continue
+
         print(' * Test * : ' + app)
         os.environ['DJANGO_SETTINGS_MODULE'] = app + '.tests.settings'
         django.setup()
