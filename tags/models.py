@@ -48,7 +48,7 @@ class TaggedModel(models.Model):
                                          default='', editable=False)
 
     @classmethod
-    def tagged_by_any(cls, tags, exclude_tags=None):
+    def objects_tagged_by_any(cls, tags, exclude_tags=None):
         tags = [x.pk for x in Tag.objects.get_or_create_list(tags)]
         if exclude_tags:
             exclude_tags = [x.pk for x in
@@ -93,7 +93,7 @@ class TaggedModel(models.Model):
         return qs
 
     @classmethod
-    def tagged_by_all(cls, tags, exclude_tags=None):
+    def objects_tagged_by_all(cls, tags, exclude_tags=None):
         tags = [x.pk for x in Tag.objects.get_or_create_list(tags)]
         if exclude_tags:
             exclude_tags = [x.pk for x in
@@ -169,9 +169,10 @@ class TaggedModel(models.Model):
             raise TypeError('tagged_items.model is not a TaggedItem instance')
         self.tags_string_cache = ', '.join(x.tag.title for x in tagged_items)
 
-    def _get_tagged_items_query_set(self):
-        return self.tagged_items.all().select_related('tag')
+    def _get_tagged_items_query_set(self, **kwargs):
+        qs = self.tagged_items if not kwargs else \
+            self.tagged_items.filter(**kwargs)
+        return qs.select_related('tag')
 
     class Meta:
         abstract = True
-

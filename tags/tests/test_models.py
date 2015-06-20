@@ -94,7 +94,7 @@ class TestTaggedModel(TestCase):
         self.assertEqual(TAGGED_BLACK.count(), 2)
         self.assertEqual(TAGGED_RETRO.count(), 1)
 
-    def test_tagged_by_any(self):
+    def test_objects_tagged_by_any(self):
         TAG_BLACK = "Black" + get_random_string()
         TAG_RETRO = "Retro" + get_random_string()
         TAG_VINTAGE = "Vintage" + get_random_string()
@@ -108,18 +108,18 @@ class TestTaggedModel(TestCase):
         p2 = self.make_photo()
         p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
 
-        bvr = p1.tagged_by_any([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
+        bvr = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
             .order_by('id')
         print("\n_ANY_bvr_", bvr.query)
         self.assertQuerysetEqual(bvr, map(repr, [p1, p2]))
 
-        bv = p1.tagged_by_any([TAG_BLACK, TAG_VINTAGE])\
+        bv = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE])\
             .order_by('id')
         print("\n_ANY_bv_", bv.query)
         self.assertQuerysetEqual(bv, map(repr, [p1, p2]))
 
     @unittest.skip("Not implemented")
-    def test_tagged_by_any_with_exclude(self):
+    def test_objects_tagged_by_any_with_exclude(self):
         TAG_BLACK = "Black" + get_random_string()
         TAG_RETRO = "Retro" + get_random_string()
         TAG_VINTAGE = "Vintage" + get_random_string()
@@ -133,18 +133,18 @@ class TestTaggedModel(TestCase):
         p2 = self.make_photo()
         p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
 
-        bvNr = p1.tagged_by_any([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
+        bvNr = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
             .order_by('id')
         print("\n_ANY_bvNr_", bvNr.query)
         self.assertQuerysetEqual(bvNr, map(repr, [p2]))
 
-        bNvNr = p1.tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+        bNvNr = p1.objects_tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
                                  [TAG_RETRO, TAG_VINTAGE])\
             .order_by('id')
         print("\n_ANY_bNvNr_", bNvNr.query)
         self.assertQuerysetEqual(bNvNr, [])
 
-    def test_tagged_by_all(self):
+    def test_objects_tagged_by_all(self):
         TAG_BLACK = "Black" + get_random_string()
         TAG_RETRO = "Retro" + get_random_string()
         TAG_VINTAGE = "Vintage" + get_random_string()
@@ -158,18 +158,18 @@ class TestTaggedModel(TestCase):
         p2 = self.make_photo()
         p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
 
-        bvr = p1.tagged_by_all([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
+        bvr = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
             .order_by('id')
         print("\n_ALL_bvr_", bvr.query)
         self.assertQuerysetEqual(bvr, map(repr, []))
 
-        bv = p1.tagged_by_all([TAG_BLACK, TAG_VINTAGE])\
+        bv = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE])\
             .order_by('id')
         print("\n_ALL_bv_", bv.query)
         self.assertQuerysetEqual(bv, map(repr, [p2]))
 
     @unittest.skip("Not implemented")
-    def test_tagged_by_all_with_exclude(self):
+    def test_objects_tagged_by_all_with_exclude(self):
         TAG_BLACK = "Black" + get_random_string()
         TAG_RETRO = "Retro" + get_random_string()
         TAG_VINTAGE = "Vintage" + get_random_string()
@@ -183,12 +183,12 @@ class TestTaggedModel(TestCase):
         p2 = self.make_photo()
         p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
 
-        bvNr = p1.tagged_by_all([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
+        bvNr = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
             .order_by('id')
         print("\n_ALL_bvNr_", bvNr.query)
         self.assertQuerysetEqual(bvNr, map(repr, [p2]))
 
-        bNvNr = p1.tagged_by_all([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+        bNvNr = p1.objects_tagged_by_all([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
                                  [TAG_RETRO, TAG_VINTAGE])\
             .order_by('id')
         print("\n_ALL_bNvNr_", bNvNr.query)
