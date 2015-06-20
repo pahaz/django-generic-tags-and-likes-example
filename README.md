@@ -39,7 +39,7 @@ Abstract Interface:
     cd vagrant-lamp
     vagrant up
     
-    # port forward to MySQL/MariaDb (if use vagrant and MySQL/MariaDb)
+    # port forward to MySQL/MariaDb (if use the Vagrant and MySQL/MariaDb)
     easy_install pycrypto
     easy_install sshtunnel
     python -m sshtunnel -U vagrant -P vagrant -L :3306 -R 127.0.0.1:3306 -p 2222 localhost
