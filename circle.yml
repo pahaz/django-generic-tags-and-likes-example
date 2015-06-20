@@ -1,0 +1,10 @@
+machine:
+  python:
+    version: python-3.4
+
+test:
+  override:
+    - python init.py
+    - `python init.py active`
+    - python runtests.py tags
+    - python runtests.py likes
