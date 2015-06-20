@@ -48,9 +48,9 @@ class Slugged(models.Model):
     Provides auto-generating slugs.
     """
 
-    title = models.CharField(_("Title"), max_length=500, unique=True,
+    title = models.CharField(_("Title"), max_length=255, unique=True,
                              db_index=True)
-    slug = models.CharField(_("URL"), max_length=1000, blank=True, null=True,
+    slug = models.CharField(_("URL"), max_length=255, blank=True, null=True,
             help_text=_("Leave blank to have the URL auto-generated from "
                         "the title."), db_index=True)
 
