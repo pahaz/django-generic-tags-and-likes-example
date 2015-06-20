@@ -4,7 +4,6 @@ machine:
 
 test:
   override:
-    - python init.py
-    - . __data__\venv\Sctipts\activate
+    - pip install -r requirements.txt
     - python runtests.py tags
     - python runtests.py likes
