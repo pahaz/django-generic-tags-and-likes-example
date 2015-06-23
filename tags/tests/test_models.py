@@ -13,8 +13,13 @@ class TestTaggedModel(TestCase):
     def setUp(self):
         ContentType.objects.get_for_model(Photo)  # warm cache
 
-    def make_photo(self):
-        return Photo._default_manager.create()
+    def make_photo(self, tags=None):
+        p = Photo._default_manager.create()
+        if tags:
+            if isinstance(tags, (list, tuple)):
+                tags = ', '.join(tags)
+            p.tags = tags
+        return p
 
     def make_unsaved_photo(self):
         return Photo()
@@ -39,6 +44,10 @@ class TestTaggedModel(TestCase):
     def assertNotTaggedBy(self, tag_title):
         tagged = self.filter_photo(tagged_items__tag__title=tag_title)
         self.assertEqual(tagged.count(), 0)
+
+    def assertQueryResultEqual(self, qs, result, transform=repr):
+        self.assertEqual(set(map(transform, qs)),
+                         set(map(transform, result)))
 
     def test_default_no_tags(self):
         p = self.make_photo()
@@ -87,10 +96,8 @@ class TestTaggedModel(TestCase):
         TAGGED_RETRO = self.filter_photo(tagged_items__tag__title=TAG_RETRO)
         self.assertEqual(TAGGED_BLACK.count(), 0)
         self.assertEqual(TAGGED_RETRO.count(), 0)
-        p1 = self.make_photo()
-        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
-        p2 = self.make_photo()
-        p2.tags = TAG_BLACK
+        self.make_photo([TAG_BLACK, TAG_RETRO])
+        self.make_photo([TAG_BLACK])
         self.assertEqual(TAGGED_BLACK.count(), 2)
         self.assertEqual(TAGGED_RETRO.count(), 1)
 
@@ -103,20 +110,16 @@ class TestTaggedModel(TestCase):
         self.assertNotTaggedBy(TAG_RETRO)
         self.assertNotTaggedBy(TAG_VINTAGE)
 
-        p1 = self.make_photo()
-        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
-        p2 = self.make_photo()
-        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+        p1 = self.make_photo([TAG_BLACK, TAG_RETRO])
+        p2 = self.make_photo([TAG_BLACK, TAG_VINTAGE])
 
-        bvr = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
-            .order_by('id')
+        bvr = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])
         print("\n_ANY_bvr_", bvr.query)
-        self.assertQuerysetEqual(bvr, map(repr, [p1, p2]))
+        self.assertQueryResultEqual(bvr, [p1, p2])
 
-        bv = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE])\
-            .order_by('id')
+        bv = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE])
         print("\n_ANY_bv_", bv.query)
-        self.assertQuerysetEqual(bv, map(repr, [p1, p2]))
+        self.assertQueryResultEqual(bv, [p1, p2])
 
     @unittest.skip("Not implemented")
     def test_objects_tagged_by_any_with_exclude(self):
@@ -128,21 +131,17 @@ class TestTaggedModel(TestCase):
         self.assertNotTaggedBy(TAG_RETRO)
         self.assertNotTaggedBy(TAG_VINTAGE)
 
-        p1 = self.make_photo()
-        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
-        p2 = self.make_photo()
-        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+        p1 = self.make_photo([TAG_BLACK, TAG_RETRO])
+        p2 = self.make_photo([TAG_BLACK, TAG_VINTAGE])
 
-        bvNr = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
-            .order_by('id')
+        bvNr = p1.objects_tagged_by_any([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])
         print("\n_ANY_bvNr_", bvNr.query)
-        self.assertQuerysetEqual(bvNr, map(repr, [p2]))
+        self.assertQueryResultEqual(bvNr, [p2])
 
         bNvNr = p1.objects_tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
-                                 [TAG_RETRO, TAG_VINTAGE])\
-            .order_by('id')
+                                         [TAG_RETRO, TAG_VINTAGE])
         print("\n_ANY_bNvNr_", bNvNr.query)
-        self.assertQuerysetEqual(bNvNr, [])
+        self.assertQueryResultEqual(bNvNr, [])
 
     def test_objects_tagged_by_all(self):
         TAG_BLACK = "Black" + get_random_string()
@@ -153,22 +152,18 @@ class TestTaggedModel(TestCase):
         self.assertNotTaggedBy(TAG_RETRO)
         self.assertNotTaggedBy(TAG_VINTAGE)
 
-        p1 = self.make_photo()
-        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
-        p2 = self.make_photo()
-        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+        p1 = self.make_photo([TAG_BLACK, TAG_RETRO])
+        p2 = self.make_photo([TAG_BLACK, TAG_VINTAGE])
 
-        bvr = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])\
-            .order_by('id')
+        bvr = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE, TAG_RETRO])
         print("\n_ALL_bvr_", bvr.query)
-        self.assertQuerysetEqual(bvr, map(repr, []))
+        self.assertQueryResultEqual(bvr, [])
 
-        bv = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE])\
-            .order_by('id')
+        bv = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE])
         print("\n_ALL_bv_", bv.query)
-        self.assertQuerysetEqual(bv, map(repr, [p2]))
+        self.assertQueryResultEqual(bv, [p2])
 
-    @unittest.skip("Not implemented")
+    # @unittest.skip("Not implemented")
     def test_objects_tagged_by_all_with_exclude(self):
         TAG_BLACK = "Black" + get_random_string()
         TAG_RETRO = "Retro" + get_random_string()
@@ -178,18 +173,103 @@ class TestTaggedModel(TestCase):
         self.assertNotTaggedBy(TAG_RETRO)
         self.assertNotTaggedBy(TAG_VINTAGE)
 
-        p1 = self.make_photo()
-        p1.tags = TAG_BLACK + ', ' + TAG_RETRO
-        p2 = self.make_photo()
-        p2.tags = TAG_BLACK + ', ' + TAG_VINTAGE
+        p1 = self.make_photo([TAG_BLACK, TAG_RETRO])
+        p2 = self.make_photo([TAG_BLACK, TAG_VINTAGE])
 
-        bvNr = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])\
-            .order_by('id')
+        bvNr = p1.objects_tagged_by_all([TAG_BLACK, TAG_VINTAGE], [TAG_RETRO])
         print("\n_ALL_bvNr_", bvNr.query)
-        self.assertQuerysetEqual(bvNr, map(repr, [p2]))
+        self.assertQueryResultEqual(bvNr, [p2])
 
         bNvNr = p1.objects_tagged_by_all([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
-                                 [TAG_RETRO, TAG_VINTAGE])\
-            .order_by('id')
+                                         [TAG_RETRO, TAG_VINTAGE])
         print("\n_ALL_bNvNr_", bNvNr.query)
-        self.assertQuerysetEqual(bNvNr, [])
+        self.assertQueryResultEqual(bNvNr, [])
+
+    def test_objects_tagged_by_all_with_exclude_complex(self):
+        TAG_BLACK = "Black" + get_random_string()
+        TAG_RETRO = "Retro" + get_random_string()
+        TAG_VINTAGE = "Vintage" + get_random_string()
+        Photo = self.get_photo_class()
+
+        self.assertNotTaggedBy(TAG_BLACK)
+        self.assertNotTaggedBy(TAG_RETRO)
+        self.assertNotTaggedBy(TAG_VINTAGE)
+
+        p0 = self.make_photo([TAG_VINTAGE, TAG_RETRO])
+        p1 = self.make_photo([TAG_BLACK, TAG_RETRO])
+        p2 = self.make_photo([TAG_BLACK, TAG_VINTAGE])
+        p3 = self.make_photo([TAG_BLACK])
+        p4 = self.make_photo([TAG_BLACK, TAG_RETRO, TAG_VINTAGE])
+        p5 = self.make_photo([TAG_RETRO])
+        p6 = self.make_photo([TAG_VINTAGE])
+
+        _p1 = Photo.objects_tagged_by_all([TAG_BLACK, TAG_RETRO],
+                                          [TAG_VINTAGE])
+        self.assertQueryResultEqual(_p1, [p1])
+
+        _p3 = Photo.objects_tagged_by_all([TAG_BLACK],
+                                          [TAG_VINTAGE, TAG_RETRO])
+        self.assertQueryResultEqual(_p3, [p3])
+
+        _p1_p5 = Photo.objects_tagged_by_all([TAG_RETRO], [TAG_VINTAGE])
+        self.assertQueryResultEqual(_p1_p5, [p1, p5])
+
+        _p4 = Photo.objects_tagged_by_all([TAG_BLACK, TAG_RETRO, TAG_VINTAGE])
+        self.assertQueryResultEqual(_p4, [p4])
+
+        _p2_p6 = Photo.objects_tagged_by_all([TAG_VINTAGE], [TAG_RETRO])
+        self.assertQueryResultEqual(_p2_p6, [p2, p6])
+
+        _p0_p6 = Photo.objects_tagged_by_all([TAG_VINTAGE], [TAG_BLACK])
+        self.assertQueryResultEqual(_p0_p6, [p0, p6])
+
+    def test_objects_tagged_by_any_with_exclude_complex(self):
+        TAG_BLACK = "Black" + get_random_string()
+        TAG_RETRO = "Retro" + get_random_string()
+        TAG_VINTAGE = "Vintage" + get_random_string()
+        Photo = self.get_photo_class()
+
+        self.assertNotTaggedBy(TAG_BLACK)
+        self.assertNotTaggedBy(TAG_RETRO)
+        self.assertNotTaggedBy(TAG_VINTAGE)
+
+        p0 = self.make_photo([TAG_VINTAGE, TAG_RETRO])
+        p1 = self.make_photo([TAG_BLACK, TAG_RETRO])
+        p2 = self.make_photo([TAG_BLACK, TAG_VINTAGE])
+        p3 = self.make_photo([TAG_BLACK])
+        p4 = self.make_photo([TAG_BLACK, TAG_RETRO, TAG_VINTAGE])
+        p5 = self.make_photo([TAG_RETRO])
+        p6 = self.make_photo([TAG_VINTAGE])
+
+        _nB = Photo.objects_tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+                                          [TAG_BLACK])
+        self.assertQueryResultEqual(_nB, [p0, p5, p6])
+
+        _nV = Photo.objects_tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+                                          [TAG_VINTAGE])
+        self.assertQueryResultEqual(_nV, [p1, p3, p5])
+
+        _nRV = Photo.objects_tagged_by_any([TAG_BLACK, TAG_RETRO, TAG_VINTAGE],
+                                           [TAG_RETRO, TAG_VINTAGE])
+        self.assertQueryResultEqual(_nRV, [p3])
+
+        _p1_p3_p5 = Photo.objects_tagged_by_any([TAG_BLACK, TAG_RETRO],
+                                                [TAG_VINTAGE])
+        self.assertQueryResultEqual(_p1_p3_p5, [p1, p3, p5])
+
+        _p3 = Photo.objects_tagged_by_any([TAG_BLACK],
+                                          [TAG_VINTAGE, TAG_RETRO])
+        self.assertQueryResultEqual(_p3, [p3])
+
+        _p1_p5 = Photo.objects_tagged_by_any([TAG_RETRO], [TAG_VINTAGE])
+        self.assertQueryResultEqual(_p1_p5, [p1, p5])
+
+        _p_all = Photo.objects_tagged_by_any(
+            [TAG_BLACK, TAG_RETRO, TAG_VINTAGE])
+        self.assertQueryResultEqual(_p_all, [p0, p1, p2, p3, p4, p5, p6])
+
+        _p2_p6 = Photo.objects_tagged_by_any([TAG_VINTAGE], [TAG_RETRO])
+        self.assertQueryResultEqual(_p2_p6, [p2, p6])
+
+        _p0_p6 = Photo.objects_tagged_by_any([TAG_VINTAGE], [TAG_BLACK])
+        self.assertQueryResultEqual(_p0_p6, [p0, p6])

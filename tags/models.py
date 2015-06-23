@@ -22,7 +22,7 @@ class Tag(Slugged):
 
     class Meta:
         db_table = 'tags'
-        unique_together = [('title', )]
+        unique_together = [('title',)]
         verbose_name = _("Tag")
         verbose_name_plural = _("Tags")
 
@@ -49,66 +49,42 @@ class TaggedModel(models.Model):
 
     @classmethod
     def objects_tagged_by_any(cls, tags, exclude_tags=None):
-        tags = [x.pk for x in Tag.objects.get_or_create_list(tags)]
+        tags = [x.pk for x in Tag.objects.get_list(tags) if x]
         if exclude_tags:
-            exclude_tags = [x.pk for x in
-                            Tag.objects.get_or_create_list(exclude_tags)]
-        qs = cls.objects.all().annotate(ids=Count('id'))
-        qs = qs.filter(Q(tagged_items__tag_id__in=tags) & Q(ids__gte=1))
+            exclude_tags = Tag.objects.get_list(exclude_tags)
+            exclude_tags = [x.pk for x in exclude_tags if x]
+
+        qs = cls.objects.annotate(ids=Count('id'))
+        q = Q(tagged_items__tag_id__in=tags) & Q(ids__gte=1)
         if exclude_tags:
-            # TODO: FIX IT
-            raise NotImplementedError
-            # model = qn(cls._meta.db_table)
-            # model_pk = qn(cls._meta.pk.column)
-            # tagged = qn(TaggedItem._meta.db_table)
-            # tagged_object_id = qn('object_id')
-            # tagged_content_type_id = qn('content_type_id')
-            # tagged_tag_id = qn('tag_id')
-            # tags_ids = ', '.join(map(str, tags))
-            # model_content_type_id = ContentType.objects.get_for_model(cls).pk
-            # # SELECT U1."object_id" FROM tagged_items U1 WHERE
-            # (U1."tag_id" IN (1) AND U1."content_type_id" = 4)
-            # qs = qs.extra(where=["""
-            # NOT ({model}.{model_pk} IN
-            # (
-            #     SELECT TAGGED1.{tagged_object_id} FROM {tagged} AS TAGGED1
-            #     WHERE TAGGED1.{tagged_tag_id} IN ({tags_ids}) AND
-            #        TAGGED1.{tagged_content_type_id} = {model_content_type_id}
-            # ))
-            # """.format(**locals())])
+            model_content_type = ContentType.objects.get_for_model(cls).pk
+            exclude_object_ids = TaggedItem.objects.filter(
+                tag_id__in=exclude_tags, content_type=model_content_type) \
+                .values('object_id')
+            q &= ~Q(id__in=exclude_object_ids)
 
-        # same with Q objects! TODO: test who faster :)
-        # if tags:
-        #     q = Q()
-        #     for tag in tags:
-        #         q &= Q(tagged_items__tag__title=tag)
-        #     qs = cls.objects.filter(q)
-        # else:
-        #     qs = cls.objects.all()
-        # if exclude_tags:
-        #     for tag in exclude_tags:
-        #         q &= ~Q(tagged_items__tag__title=tag)
-        #     qs = cls.objects.exclude(q)
-
-        return qs
+        return qs.filter(q)
 
     @classmethod
     def objects_tagged_by_all(cls, tags, exclude_tags=None):
-        tags = [x.pk for x in Tag.objects.get_or_create_list(tags)]
+        tags = Tag.objects.get_list(tags)
+        if any(x is None for x in tags):
+            return cls.objects.none()
+        tags = [x.pk for x in tags]
         if exclude_tags:
-            exclude_tags = [x.pk for x in
-                            Tag.objects.get_or_create_list(exclude_tags)]
-        # tags = set(tags)
-        # if exclude_tags:
-        #     exclude_tags = set(exclude_tags)
-        #     tags = tags - exclude_tags
-        qs = cls.objects.all().annotate(ids=Count('id'))
-        qs = qs.filter(Q(tagged_items__tag_id__in=tags) & Q(ids=len(tags)))
+            exclude_tags = Tag.objects.get_list(exclude_tags)
+            exclude_tags = [x.pk for x in exclude_tags if x]
+
+        qs = cls.objects.annotate(ids=Count('id'))
+        q = Q(tagged_items__tag_id__in=tags) & Q(ids=len(tags))
         if exclude_tags:
-            # TODO: FIX IT
-            raise NotImplementedError
-            # q = q & (~Q(tagged_items__tag_id__in=exclude_tags))
-        return qs
+            model_content_type = ContentType.objects.get_for_model(cls).pk
+            exclude_object_ids = TaggedItem.objects.filter(
+                tag_id__in=exclude_tags, content_type=model_content_type) \
+                .values('object_id')
+            q &= ~Q(id__in=exclude_object_ids)
+
+        return qs.filter(q)
 
     def _get_tags(self):
         return self.tags_string_cache

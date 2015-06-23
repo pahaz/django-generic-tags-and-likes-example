@@ -1,7 +1,9 @@
 from __future__ import unicode_literals, print_function, generators, division
+import logging
 from django.db import models
 
 __author__ = 'pahaz'
+log = logging.getLogger(__name__)
 
 
 class TagManager(models.Manager):
@@ -18,5 +20,19 @@ class TagManager(models.Manager):
         result = []
         for tag in tags:
             obj, is_created = self.get_or_create(title=tag)
+            result.append(obj)
+        return result
+
+    def get_list(self, tags):
+        result = []
+        for tag in tags:
+            try:
+                obj = self.get(title=tag)
+            except self.model.DoesNotExist:
+                obj = None
+            except self.model.MultipleObjectsReturned:
+                log.warning('Found desynchronized db state. Tag with title '
+                            '"{0}" have multiple results.'.format(tag))
+                obj = None
             result.append(obj)
         return result
