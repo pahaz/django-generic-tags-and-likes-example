@@ -1,5 +1,7 @@
 # Simple Tagged/Liked Photo Server
 
+[![Circle CI](https://circleci.com/gh/pahaz/django-generic-tags-and-likes-example.svg?style=svg)](https://circleci.com/gh/pahaz/django-generic-tags-and-likes-example)
+
 Example of use django generic models (contenttype framework). Provide two 
 generic apps: `tags` and `likes`. And `photos` app as example of use `tags` and
  `likes`.
@@ -16,19 +18,21 @@ Required Django 1.8!
 
 ## LikedModel ##
 
-Provide:
-    - objects_liked_by(user)
-    - like_by(user)
-    - dislike_by(user)
-    - is_liked_by(user)
-    - likes  # get property
+Abstract Interface:
+
+ - `objects_liked_by(user)`
+ - `like_by(user)`
+ - `dislike_by(user)`
+ - `is_liked_by(user)`
+ - `likes`  # get property
 
 ## TaggedModel ##
 
-Provide:
-    - objects_tagged_by_any(tags, exclude_tags)
-    - objects_tagged_by_all(tags, exclude_tags)
-    - tags  # get/set property
+Abstract Interface:
+
+ - `objects_tagged_by_any(tags, exclude_tags)`
+ - `objects_tagged_by_all(tags, exclude_tags)`
+ - `tags`  # get/set property
 
 # How-To
 
@@ -37,7 +41,7 @@ Provide:
     cd vagrant-lamp
     vagrant up
     
-    # port forward to MySQL/MariaDb (if use vagrant and MySQL/MariaDb)
+    # port forward to MySQL/MariaDb (if use the Vagrant and MySQL/MariaDb)
     easy_install pycrypto
     easy_install sshtunnel
     python -m sshtunnel -U vagrant -P vagrant -L :3306 -R 127.0.0.1:3306 -p 2222 localhost

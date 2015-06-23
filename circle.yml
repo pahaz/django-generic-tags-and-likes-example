@@ -1,0 +1,9 @@
+machine:
+  python:
+    version: 3.4.2
+
+test:
+  override:
+    - pip install -r requirements.txt
+    - python runtests.py tags
+    - python runtests.py likes
